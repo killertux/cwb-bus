@@ -10,3 +10,4 @@ class FileType(Enum):
 	POIS = auto()
 	LINHAS = auto()
 	VEICULOS = auto()
+	ALL = auto()
