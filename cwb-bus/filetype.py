@@ -2,7 +2,6 @@ from enum import Enum, auto
 
 
 class FileType(Enum):
-	ALL = auto()
 	TRECHOS_ITINERARIOS = "trechosItinerarios.json"
 	TABELA_VEICULO = "tabelaVeiculo.json"
 	TABELA_LINHA = "tabelaLinha.json"
