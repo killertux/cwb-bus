@@ -15,7 +15,6 @@ async def _download_file(date: str, data_type: FileType = None,
 	:param date:
 	:param data_type:
 	:param base_url:
-	:param download_folder:
 	:return:
 	"""
 	pass
@@ -25,24 +24,25 @@ async def _uncompress_file(file):
 	"""
 
 	:param file:
-	:param keep:
 	:return:
 	"""
 	pass
 
 
-async def get_data(date: str, data_type: FileType=None):
+async def get_data(date: str, data_type: FileType = None, from_folder: str = None):
 	"""
 
+	:param from_folder:
 	:param date:
 	:param data_type:
 	:return:
 	"""
 	pass
 
-async def get_data_range(start_date: str, end_date: str, data_type=None):
+async def get_data_range(start_date: str, end_date: str, data_type=None, from_folder: str = None):
 	"""
 
+	:param from_folder:
 	:param start_date:
 	:param end_date:
 	:param data_type:
