@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp 
 from datetime import date
-from filetype import FileType
+from .filetype import FileType
 
 
 _session = aiohttp.ClientSession()
