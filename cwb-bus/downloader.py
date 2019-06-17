@@ -9,10 +9,13 @@ _download_folder = "./cache/downloads/"
 
 
 async def _download_file(data_date: date, session: aiohttp.ClientSession, data_type: FileType = None,
-                         base_url: str = "http://dadosabertos.c3sl.ufpr.br/curitibaurbs/"):
-	"""
-	Internal function to actually download the data.
-	Will try to grab from the base_url + the types specified
+                         base_url: str = "http://dadosabertos.c3sl.ufpr.br/curitibaurbs/") -> bytes:
+	"""Internal function that downloads the data.
+
+	This function will try to grab the data from the server using asynchronous requests.
+	Will try to grab from the `base_url` plus the types specified and append an extension.
+	It will first try the `.xz` extension as it is more common. However, it will also try the `.tar.gz`
+	extension as it was also used early on.
 
 	:param data_date: A :class:`datetime.date` instance with the specific date for the data that wants to be gathered
 	:param session: A :class:`aiohttp.ClientSession` session for downloading. Should probably only instance 1 for an entire operation
@@ -23,7 +26,7 @@ async def _download_file(data_date: date, session: aiohttp.ClientSession, data_t
 	pass
 
 
-async def _uncompress_file(file: bytes):
+async def _uncompress_file(file: bytes) -> bytes:
 	"""
 
 	:param file:
