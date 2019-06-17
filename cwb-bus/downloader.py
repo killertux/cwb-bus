@@ -9,8 +9,7 @@ _download_folder = "./cache/downloads/"
 
 
 async def _download_file(date: str, data_type: FileType = None,
-                         base_url: str = "http://dadosabertos.c3sl.ufpr.br/curitibaurbs/",
-                         download_folder=_download_folder):
+                         base_url: str = "http://dadosabertos.c3sl.ufpr.br/curitibaurbs/"):
 	"""
 
 	:param date:
@@ -22,7 +21,7 @@ async def _download_file(date: str, data_type: FileType = None,
 	pass
 
 
-async def _uncompress_file(file, keep=False, download_folder=_download_folder):
+async def _uncompress_file(file):
 	"""
 
 	:param file:
