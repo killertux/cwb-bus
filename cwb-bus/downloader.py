@@ -39,7 +39,7 @@ async def _download_file(data_date: date, data_type: FileType, session: aiohttp.
 			return file
 
 
-async def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
+def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
 	"""
 
 	:param from_folder:
@@ -47,7 +47,23 @@ async def get_data(data_date: date, data_type: FileType = None, from_folder: str
 	:param data_type:
 	:return:
 	"""
-	pass
+	data = {}
+	if data_type is None:
+		with aiohttp.ClientSession() as session:
+			for f_type in FileType:
+				if not from_folder:
+					data[f_type] = decompress(_download_file(data_date, f_type, session))
+				else:
+					pass  # TODO: Implement the from_folder type
+
+			return data
+
+	with aiohttp.ClientSession() as session:
+		if not from_folder:
+			data[data_type] = decompress(_download_file(data_date, data_type, session))
+			return data
+
+		# TODO: Implement the from_folder type
 
 
 def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
