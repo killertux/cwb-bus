@@ -65,20 +65,20 @@ async def get_data(data_date: date, data_type: FileType = None, from_folder: str
 		async with aiohttp.ClientSession() as session:
 			for f_type in FileType:
 				if not from_folder:
-					data[f_type] = decompress(_download_file(data_date, f_type, session))
+					data[f_type] = decompress(await _download_file(data_date, f_type, session))
 				else:
 					data[f_type] = decompress(_read_file(data_date, f_type, from_folder))
 			return data
 
 	async with aiohttp.ClientSession() as session:
 		if not from_folder:
-			data[data_type] = decompress(_download_file(data_date, data_type, session))
+			data[data_type] = decompress(await _download_file(data_date, data_type, session))
 		else:
 			data[data_type] = decompress(_read_file(data_date, data_type, from_folder))
 		return data
 
 
-def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
+async def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
 	"""
 	A generator for dates, iterates over all the days between start_date and end_date (inclusive) getting data
 
@@ -90,4 +90,4 @@ def get_data_range(start_date: date, end_date: date, data_type=None, from_folder
 	"""
 	for n in range(int((end_date - start_date).days + 1)):
 		day = start_date + timedelta(n)
-		yield day, get_data(day, data_type, from_folder)
+		yield day, await get_data(day, data_type, from_folder)
