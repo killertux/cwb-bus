@@ -24,26 +24,25 @@ async def _download_file(data_date: date, data_type: FileType, session: aiohttp.
 	:param data_type: What type of data to download. See :class:`FileType` for available types
 	:param base_url: The base url for downloading data. Shouldn't need to be changed ever
 	:param timeout: Timeout value for the download until giving up
-	:return: a already decompressed `bytes` object
+	:return: a compressed `bytes` object
 	"""
 	with async_timeout.timeout(timeout):
-		async with session.get(f'{base_url}{data_type.value}.xz') as response:
+		async with session.get(f'{base_url}{data_date.strftime("%Y_%m_%d")}_{data_type.value}.xz') as response:
 			file = b''
 			while True:
 				chunk = await response.content.read(1024)
 				if not chunk:
 					break
 				file += chunk
-			await response.release()
 
-			return decompress(file)
+			return await response.release()
 
 
 async def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
 	"""
 
 	:param from_folder:
-	:param date:
+	:param data_date:
 	:param data_type:
 	:return:
 	"""
