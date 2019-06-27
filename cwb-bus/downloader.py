@@ -34,8 +34,9 @@ async def _download_file(data_date: date, data_type: FileType, session: aiohttp.
 				if not chunk:
 					break
 				file += chunk
+			await response.release()
 
-			return await response.release()
+			return file
 
 
 async def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
