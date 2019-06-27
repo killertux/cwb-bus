@@ -51,12 +51,14 @@ async def get_data(data_date: date, data_type: FileType = None, from_folder: str
 
 def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
 	"""
+	A generator for dates, iterates over all the days between start_date and end_date (inclusive) getting data
 
-	:param from_folder:
-	:param start_date:
-	:param end_date:
-	:param data_type:
-	:return:
+	:param start_date: A `datetime.date` object for the starting date
+	:param end_date: A `datetime.date` object for the ending date
+	:param data_type: The type of data to download, or None for all types. See :class:`FileType` for available types
+	:param from_folder: Read files from a folder instead of downloading. Expects the exact same pattern from the original URBS database
+	:return: A tuple where the first element is the date and the second element the return from get_data
 	"""
 	for n in range(int((end_date - start_date).days + 1)):
-		yield get_data(start_date + timedelta(n), data_type, from_folder)
+		day = start_date + timedelta(n)
+		yield day, get_data(day, data_type, from_folder)
