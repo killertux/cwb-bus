@@ -1,13 +1,8 @@
-import asyncio
 import async_timeout
 import aiohttp
 from lzma import decompress
 from datetime import date, timedelta
 from .filetype import FileType
-
-
-#_session = aiohttp.ClientSession()
-_download_folder = "./cache/downloads/"
 
 
 async def _download_file(data_date: date, data_type: FileType, session: aiohttp.ClientSession,
@@ -39,16 +34,21 @@ async def _download_file(data_date: date, data_type: FileType, session: aiohttp.
 			return file
 
 
-def _read_file(data_date: date, data_type: FileType) -> bytes:
+def _read_file(data_date: date, data_type: FileType, folder: str) -> bytes:
 	"""
 	Internal function for reading from a file instead of downloading
 	Expects the same file naming scheme that is used on the online repository
 
 	:param data_date: A :class:`datetime.date` instance with the specific date for the data that wants to be gathered
 	:param data_type: What type of data to download, or None for all types. See :class:`FileType` for available types
+	:param folder: The folder where the file is supposed to be contained
 	:return: a compressed `bytes` object
 	"""
-	pass
+	if not folder.endswith('/'):
+		folder += '/'
+
+	with open(f'{folder}{data_date.strftime("%Y_%m_%d")}_{data_type.value}.xz', 'rb') as file:
+		return file.read()
 
 
 def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
@@ -67,16 +67,15 @@ def get_data(data_date: date, data_type: FileType = None, from_folder: str = Non
 				if not from_folder:
 					data[f_type] = decompress(_download_file(data_date, f_type, session))
 				else:
-					pass  # TODO: Implement the from_folder type
-
+					data[f_type] = decompress(_read_file(data_date, f_type, from_folder))
 			return data
 
 	with aiohttp.ClientSession() as session:
 		if not from_folder:
 			data[data_type] = decompress(_download_file(data_date, data_type, session))
-			return data
-
-		# TODO: Implement the from_folder type
+		else:
+			data[data_type] = decompress(_read_file(data_date, data_type, from_folder))
+		return data
 
 
 def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
