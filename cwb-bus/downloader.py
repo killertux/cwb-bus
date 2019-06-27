@@ -2,7 +2,7 @@ import asyncio
 import async_timeout
 import aiohttp
 from lzma import decompress
-from datetime import date
+from datetime import date, timedelta
 from .filetype import FileType
 
 
@@ -48,7 +48,8 @@ async def get_data(data_date: date, data_type: FileType = None, from_folder: str
 	"""
 	pass
 
-async def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
+
+def get_data_range(start_date: date, end_date: date, data_type=None, from_folder: str = None):
 	"""
 
 	:param from_folder:
@@ -57,4 +58,5 @@ async def get_data_range(start_date: date, end_date: date, data_type=None, from_
 	:param data_type:
 	:return:
 	"""
-	pass
+	for n in range(int((end_date - start_date).days + 1)):
+		yield get_data(start_date + timedelta(n), data_type, from_folder)
