@@ -73,6 +73,9 @@ class DataReader(object):
 		# FIXME: colunas fixas
 		self.itinerary_stops = pd.DataFrame(columns=['itinerary_id', 'sequence_number', 'stop_number'])
 
+		self.schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'day_type', 'time',
+		                                             'adaptive'])
+
 		self.points_of_interest = pd.DataFrame(columns=_pois['points_of_interest']['cols'])
 
 	def feed_linhas_json(self, filename: str):
@@ -140,7 +143,25 @@ class DataReader(object):
 		self.bus_line_shapes = bus_line_shape_data
 
 	def feed_tabela_linha_json(self, filename):
-		pass
+		file_data = pd.read_json(filename)
+		schedule_table_data = file_data[['TABELA', 'COD', 'NUM', 'DIA', 'HORA', 'ADAPT']].copy()
+
+		schedule_table_data.rename(columns={
+			'TABELA': 'table_id',
+			'COD': 'bus_line_id',
+			'NUM': 'bus_stop_id',
+			'DIA': 'day_type',
+			'HORA': 'time',
+			'ADAPT': 'adaptive'
+		}, inplace=True)
+		schedule_table_data.replace({'day_type': {
+			1: 'weekday',
+			2: 'saturday',
+			3: 'sunday',
+			4: 'holiday'
+		}}, inplace=True)
+
+		self.schedule_tables = self.schedule_tables.merge(schedule_table_data, how='outer')
 
 	def feed_tabela_veiculo_json(self, filename):
 		pass
