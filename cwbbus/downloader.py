@@ -51,7 +51,7 @@ def _read_file(data_date: date, data_type: FileType, folder: str) -> bytes:
 		return file.read()
 
 
-def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
+async def get_data(data_date: date, data_type: FileType = None, from_folder: str = None):
 	"""
 	Grabs the data for a single day
 
@@ -62,7 +62,7 @@ def get_data(data_date: date, data_type: FileType = None, from_folder: str = Non
 	"""
 	data = {}
 	if data_type is None:
-		with aiohttp.ClientSession() as session:
+		async with aiohttp.ClientSession() as session:
 			for f_type in FileType:
 				if not from_folder:
 					data[f_type] = decompress(_download_file(data_date, f_type, session))
@@ -70,7 +70,7 @@ def get_data(data_date: date, data_type: FileType = None, from_folder: str = Non
 					data[f_type] = decompress(_read_file(data_date, f_type, from_folder))
 			return data
 
-	with aiohttp.ClientSession() as session:
+	async with aiohttp.ClientSession() as session:
 		if not from_folder:
 			data[data_type] = decompress(_download_file(data_date, data_type, session))
 		else:
