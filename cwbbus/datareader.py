@@ -55,6 +55,7 @@ _pois['points_of_interest']['orig_cols'] = [*_pois['points_of_interest']['map']]
 _pois['points_of_interest']['cols'] = [*_pois['points_of_interest']['map'].values()]
 _pois['points_of_interest']['index'] = _pois['points_of_interest']['map']['POI_NAME']
 
+# TODO: Ver o que pode ser otimizado. Nos dados que vêm de um único arquivo, pode-se utilizar concat em vez de merge.
 
 class DataReader(object):
 	def __init__(self):
@@ -62,20 +63,15 @@ class DataReader(object):
 		Stores all dataframes and provides methods to feed data into the dataframes.
 		"""
 		self.bus_lines = pd.DataFrame(columns=_lines['bus_lines']['cols'])
-
-		# FIXME: colunas fixas
 		self.bus_line_shapes = pd.DataFrame(columns=['id', 'bus_line_id', 'latitude', 'longitude'])
-
 		self.bus_stops = pd.DataFrame(columns=_line_stops['bus_stops']['cols'])
-
 		self.itineraries = pd.DataFrame(columns=_line_stops['itineraries']['cols'])
-
-		# FIXME: colunas fixas
 		self.itinerary_stops = pd.DataFrame(columns=['itinerary_id', 'sequence_number', 'stop_number'])
-
-		self.schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'day_type', 'time',
-		                                             'adaptive'])
-
+		self.bus_lines_schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'day_type',
+		                                                       'time', 'adaptive'])
+		self.vehicles_schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'vehicle_id',
+		                                                      'time'])
+		self.vehicles = pd.DataFrame(columns=['id'])
 		self.points_of_interest = pd.DataFrame(columns=_pois['points_of_interest']['cols'])
 
 	def feed_linhas_json(self, filename: str):
@@ -161,10 +157,22 @@ class DataReader(object):
 			4: 'holiday'
 		}}, inplace=True)
 
-		self.schedule_tables = self.schedule_tables.merge(schedule_table_data, how='outer')
+		self.bus_lines_schedule_tables = self.bus_lines_schedule_tables.merge(schedule_table_data, how='outer')
 
 	def feed_tabela_veiculo_json(self, filename):
-		pass
+		file_data = pd.read_json(filename)
+		schedule_table_data = file_data[['TABELA', 'COD_LINHA', 'COD_PONTO', 'HORARIO', 'VEICULO']].copy()
+
+		schedule_table_data.rename(columns={
+			'TABELA': 'table_id',
+			'COD_LINHA': 'bus_line_id',
+			'COD_PONTO': 'bus_stop_id',
+			'HORARIO': 'time',
+			'VEICULO': 'vehicle_id'
+		}, inplace=True)
+		schedule_table_data['bus_line_id'] = schedule_table_data['bus_line_id'].astype(str)
+
+		self.vehicles_schedule_tables = self.vehicles_schedule_tables.merge(schedule_table_data, how='outer')
 
 	def feed_trechos_itinerarios_json(self, filename):
 		pass
