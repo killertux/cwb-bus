@@ -72,6 +72,13 @@ class DataReader(object):
 		self.vehicles_schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'vehicle_id',
 		                                                      'time'])
 		self.vehicles = pd.DataFrame(columns=['id'])
+		self.itinerary_stops_extra = pd.DataFrame(columns=['itinerary_id', 'itinerary_name', 'bus_line_id',
+		                                                   'itinerary_stop_id', 'stop_name', 'stop_name_short',
+		                                                   'stop_name_abbr', 'bus_stop_id', 'sequence_number', 'type',
+		                                                   'special_stop'])
+		self.itinerary_distances = pd.DataFrame(columns=['itinerary_stop_id', 'itinerary_next_stop_id', 'distance_m'])
+		self.companies = pd.DataFrame(columns=['id', 'name'])
+		self.itinerary_stops_companies = pd.DataFrame(columns=['itinerary_stop_id', 'company_id'])
 		self.points_of_interest = pd.DataFrame(columns=_pois['points_of_interest']['cols'])
 
 	def feed_linhas_json(self, filename: str):
@@ -175,7 +182,52 @@ class DataReader(object):
 		self.vehicles_schedule_tables = self.vehicles_schedule_tables.merge(schedule_table_data, how='outer')
 
 	def feed_trechos_itinerarios_json(self, filename):
-		pass
+		file_data = pd.read_json(filename)
+		itinerary_stops_data = file_data[['COD_ITINERARIO', 'NOME_ITINERARIO', 'COD_LINHA', 'CODIGO_URBS', 'STOP_NAME',
+		                                  'NOME_PTO_PARADA_TH', 'NOME_PTO_ABREVIADO', 'STOP_CODE', 'SEQ_PONTO_TRECHO_A',
+		                                  'TIPO_TRECHO', 'PTO_ESPECIAL']].copy()
+		itinerary_distances_data = file_data[['CODIGO_URBS', 'COD_PTO_TRECHO_B', 'EXTENSAO_TRECHO_A_ATE_B']].copy()
+		company_data = file_data[['COD_EMPRESA', 'NOME_EMPRESA']].copy()
+		itinerary_stops_company_data = file_data[['CODIGO_URBS', 'COD_EMPRESA']].copy()
+
+		itinerary_stops_data.rename(columns={
+			'COD_ITINERARIO': 'itinerary_id',
+			'NOME_ITINERARIO': 'itinerary_name',
+			'COD_LINHA': 'bus_line_id',
+			'CODIGO_URBS': 'itinerary_stop_id',
+			'STOP_NAME': 'stop_name',
+			'NOME_PTO_PARADA_TH': 'stop_name_short',
+			'NOME_PTO_ABREVIADO': 'stop_name_abbr',
+			'STOP_CODE': 'bus_stop_id',
+			'SEQ_PONTO_TRECHO_A': 'sequence_number',
+			'TIPO_TRECHO': 'type',
+			'PTO_ESPECIAL': 'special_stop'
+		}, inplace=True)
+		itinerary_stops_data.drop_duplicates(inplace=True)
+
+		itinerary_distances_data.rename(columns={
+			'CODIGO_URBS': 'itinerary_stop_id',
+			'COD_PTO_TRECHO_B': 'itinerary_next_stop_id',
+			'EXTENSAO_TRECHO_A_ATE_B': 'distance_m'
+		}, inplace=True)
+		itinerary_distances_data.drop_duplicates(inplace=True)
+
+		company_data.rename(columns={
+			'COD_EMPRESA': 'id',
+			'NOME_EMPRESA': 'name'
+		}, inplace=True)
+		company_data.drop_duplicates(inplace=True)
+
+		itinerary_stops_company_data.rename(columns={
+			'CODIGO_URBS': 'itinerary_stop_id',
+			'COD_EMPRESA': 'company_id'
+		}, inplace=True)
+		itinerary_stops_company_data.drop_duplicates(inplace=True)
+
+		self.itinerary_stops_extra = self.itinerary_stops_extra.merge(itinerary_stops_data, how='outer')
+		self.itinerary_distances = self.itinerary_distances.merge(itinerary_distances_data, how='outer')
+		self.companies = self.companies.merge(company_data, how='outer')
+		self.itinerary_stops_companies = self.itinerary_stops_companies.merge(itinerary_stops_company_data, how='outer')
 
 	def feed_veiculos_json(self, filename):
 		pass
