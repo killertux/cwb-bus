@@ -1,10 +1,10 @@
 from setuptools import setup
 
 setup(
-	name='cwb-bus',
+	name='cwbbus',
 	version='0.0.1',
 	packages=[''],
-	package_dir={'': 'cwb-bus'},
+	package_dir={'': 'cwbbus'},
 	url='https://github.com/killertux/cwb-bus',
 	license='MIT',
 	author='Angelin01, killertux, Kabbah',
