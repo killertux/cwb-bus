@@ -1,6 +1,9 @@
+from typing import Union
+
 import pandas as pd
 
-# TODO: Ver o que pode ser otimizado. Nos dados que vêm de um único arquivo, pode-se utilizar concat em vez de merge.
+from .filetype import FileType
+
 
 class DataReader(object):
 	def __init__(self):
@@ -26,12 +29,65 @@ class DataReader(object):
 		self.vehicle_log = pd.DataFrame(columns=['timestamp', 'vehicle_id', 'bus_line_id', 'latitude', 'longitude'])
 		self.points_of_interest = pd.DataFrame(columns=['name', 'description', 'category', 'latitude', 'longitude'])
 
-	def feed_linhas_json(self, filename: str):
+	def feed_data(self, file: Union[bytes, str], data_type: FileType):
 		"""
-		Reads a *_linhas.json file and merges the data into the bus_lines dataframe.
-		:param filename: path to the file
+		Feeds data into the reader's internal dataframes.
+		:param file: File which contains the data.
+		If a *bytes* object is provided, the object will be interpreted as the actual decompressed content of the file.
+		Alternatively, if a *str* object is provided, the object will be interpreted as the path to a file in the user's
+		operating system. Supports the same compression types supported by pandas.
+		:param data_type: Type of data. See :class:`FileType` for available types
 		"""
-		file_data = pd.read_json(filename)
+		# User provided raw binary data
+		if isinstance(file, bytes):
+			pass
+		# User provided file path
+		elif isinstance(file, str):
+			self._feed_data_from_path(file, data_type)
+		# Unsupported type
+		else:
+			raise TypeError("Expected bytes (file content) or str (file name)")
+
+	def _feed_data_from_path(self, filename: str, data_type: FileType):
+		"""
+		Reads a file in the user's operating system as a pandas dataframe and calls the apropriate function to merge the
+		data into the internal dataframes.
+		:param filename: Path to the file.
+		:param data_type: Type of data. See :class:`FileType` for available types
+		"""
+		# pd.read_json can take a long time. Therefore, we only read the file if the data_type parameter is valid.
+		if data_type == FileType.LINHAS:
+			file_data = pd.read_json(filename)
+			self._feed_linhas_json(file_data)
+		elif data_type == FileType.POIS:
+			file_data = pd.read_json(filename)
+			self._feed_pois_json(file_data)
+		elif data_type == FileType.PONTOS_LINHA:
+			file_data = pd.read_json(filename)
+			self._feed_pontos_linha_json(file_data)
+		elif data_type == FileType.SHAPE_LINHA:
+			file_data = pd.read_json(filename)
+			self._feed_shape_linha_json(file_data)
+		elif data_type == FileType.TABELA_LINHA:
+			file_data = pd.read_json(filename)
+			self._feed_tabela_linha_json(file_data)
+		elif data_type == FileType.TABELA_VEICULO:
+			file_data = pd.read_json(filename)
+			self._feed_tabela_veiculo_json(file_data)
+		elif data_type == FileType.TRECHOS_ITINERARIOS:
+			file_data = pd.read_json(filename)
+			self._feed_trechos_itinerarios_json(file_data)
+		elif data_type == FileType.VEICULOS:
+			file_data = pd.read_json(filename, lines=True)
+			self._feed_veiculos_json(file_data)
+		else:
+			raise ValueError("Invalid data_type parameter")
+
+	def _feed_linhas_json(self, file_data: pd.DataFrame):
+		"""
+		Merges the data provided into the bus_lines dataframe.
+		:param file_data: Dataframe to merge.
+		"""
 		bus_line_data = file_data[['COD', 'NOME', 'NOME_COR', 'SOMENTE_CARTAO', 'CATEGORIA_SERVICO']].copy()
 
 		bus_line_data.rename(columns={
@@ -44,12 +100,11 @@ class DataReader(object):
 
 		self.bus_lines = self.bus_lines.merge(bus_line_data, how='outer')
 
-	def feed_pois_json(self, filename):
+	def _feed_pois_json(self, file_data: pd.DataFrame):
 		"""
-		Reads a *_pois.json file and merges the data into the points_of_interest dataframe.
-		:param filename: path to the file
+		Merges the data provided into the points_of_interest dataframe.
+		:param file_data: Dataframe to merge.
 		"""
-		file_data = pd.read_json(filename)
 		poi_data = file_data[['POI_NAME', 'POI_DESC', 'POI_CATEGORY_NAME', 'POI_LAT', 'POI_LON']].copy()
 
 		poi_data.rename(columns={
@@ -62,12 +117,11 @@ class DataReader(object):
 
 		self.points_of_interest = self.points_of_interest.merge(poi_data, how='outer')
 
-	def feed_pontos_linha_json(self, filename):
+	def _feed_pontos_linha_json(self, file_data: pd.DataFrame):
 		"""
-		Reads a *_pontosLinha.json file and merges the data into the bus_stops dataframe.
-		:param filename: path to the file
+		Merges the data provided into the bus_stops, itineraries and itinerary_stops dataframes.
+		:param file_data: Dataframe to merge.
 		"""
-		file_data = pd.read_json(filename)
 		bus_stop_data = file_data[['NUM', 'NOME', 'TIPO', 'LAT', 'LON']].copy()
 		itinerary_data = file_data[['ITINERARY_ID', 'COD', 'SENTIDO']].copy()
 		itinerary_stops_data = file_data[['ITINERARY_ID', 'SEQ', 'NUM']].copy()
@@ -99,8 +153,11 @@ class DataReader(object):
 		self.itineraries = self.itineraries.merge(itinerary_data, how='outer')
 		self.itinerary_stops = self.itinerary_stops.merge(itinerary_stops_data, how='outer')
 
-	def feed_shape_linha_json(self, filename):
-		file_data = pd.read_json(filename)
+	def _feed_shape_linha_json(self, file_data: pd.DataFrame):
+		"""
+		Merges the data provided into the bus_line_shapes dataframe.
+		:param file_data: Dataframe to merge.
+		"""
 		bus_line_shape_data = file_data[['SHP', 'COD', 'LAT', 'LON']].copy()
 
 		bus_line_shape_data.rename(columns={
@@ -112,8 +169,11 @@ class DataReader(object):
 
 		self.bus_line_shapes = bus_line_shape_data
 
-	def feed_tabela_linha_json(self, filename):
-		file_data = pd.read_json(filename)
+	def _feed_tabela_linha_json(self, file_data: pd.DataFrame):
+		"""
+		Merges the data provided into the bus_lines_schedule_tables dataframe.
+		:param file_data: Dataframe to merge.
+		"""
 		schedule_table_data = file_data[['TABELA', 'COD', 'NUM', 'DIA', 'HORA', 'ADAPT']].copy()
 
 		schedule_table_data.rename(columns={
@@ -134,8 +194,11 @@ class DataReader(object):
 
 		self.bus_lines_schedule_tables = self.bus_lines_schedule_tables.merge(schedule_table_data, how='outer')
 
-	def feed_tabela_veiculo_json(self, filename):
-		file_data = pd.read_json(filename)
+	def _feed_tabela_veiculo_json(self, file_data: pd.DataFrame):
+		"""
+		Merges the data provided into the vehicles_schedule_tables dataframe.
+		:param file_data: Dataframe to merge.
+		"""
 		schedule_table_data = file_data[['TABELA', 'COD_LINHA', 'COD_PONTO', 'HORARIO', 'VEICULO']].copy()
 
 		schedule_table_data.rename(columns={
@@ -150,8 +213,12 @@ class DataReader(object):
 
 		self.vehicles_schedule_tables = self.vehicles_schedule_tables.merge(schedule_table_data, how='outer')
 
-	def feed_trechos_itinerarios_json(self, filename):
-		file_data = pd.read_json(filename)
+	def _feed_trechos_itinerarios_json(self, file_data: pd.DataFrame):
+		"""
+		Merges the data provided into the itinerary_stops_extra, itinerary_distances, companies and
+		itinerary_stops_companies dataframes.
+		:param file_data: Dataframe to merge.
+		"""
 		itinerary_stops_data = file_data[['COD_ITINERARIO', 'NOME_ITINERARIO', 'COD_LINHA', 'CODIGO_URBS', 'STOP_NAME',
 		                                  'NOME_PTO_PARADA_TH', 'NOME_PTO_ABREVIADO', 'STOP_CODE', 'SEQ_PONTO_TRECHO_A',
 		                                  'TIPO_TRECHO', 'PTO_ESPECIAL']].copy()
@@ -198,8 +265,12 @@ class DataReader(object):
 		self.companies = self.companies.merge(company_data, how='outer')
 		self.itinerary_stops_companies = self.itinerary_stops_companies.merge(itinerary_stops_company_data, how='outer')
 
-	def feed_veiculos_json(self, filename):
-		vehicle_log_data = pd.read_json(filename, lines=True)
+	def _feed_veiculos_json(self, file_data: pd.DataFrame):
+		"""
+		Sets the data provided as the vehicle_log dataframe.
+		:param file_data: Dataframe to set.
+		"""
+		vehicle_log_data = file_data
 		vehicle_log_data.rename(columns={
 			'DTHR': 'timestamp',
 			'VEIC': 'vehicle_id',
