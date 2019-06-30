@@ -38,50 +38,39 @@ class DataReader(object):
 		operating system. Supports the same compression types supported by pandas.
 		:param data_type: Type of data. See :class:`FileType` for available types
 		"""
-		# User provided raw binary data
-		if isinstance(file, bytes):
-			pass
-		# User provided file path
-		elif isinstance(file, str):
-			self._feed_data_from_path(file, data_type)
+		# User provided raw binary data or file path (both are supported by pandas)
+		if isinstance(file, bytes) or isinstance(file, str):
+			# pd.read_json can take a long time. Therefore, we only read the file if the data_type parameter is valid.
+			if data_type == FileType.LINHAS:
+				file_data = pd.read_json(file)
+				self._feed_linhas_json(file_data)
+			elif data_type == FileType.POIS:
+				file_data = pd.read_json(file)
+				self._feed_pois_json(file_data)
+			elif data_type == FileType.PONTOS_LINHA:
+				file_data = pd.read_json(file)
+				self._feed_pontos_linha_json(file_data)
+			elif data_type == FileType.SHAPE_LINHA:
+				file_data = pd.read_json(file)
+				self._feed_shape_linha_json(file_data)
+			elif data_type == FileType.TABELA_LINHA:
+				file_data = pd.read_json(file)
+				self._feed_tabela_linha_json(file_data)
+			elif data_type == FileType.TABELA_VEICULO:
+				file_data = pd.read_json(file)
+				self._feed_tabela_veiculo_json(file_data)
+			elif data_type == FileType.TRECHOS_ITINERARIOS:
+				file_data = pd.read_json(file)
+				self._feed_trechos_itinerarios_json(file_data)
+			elif data_type == FileType.VEICULOS:
+				file_data = pd.read_json(file, lines=True)
+				self._feed_veiculos_json(file_data)
+			else:
+				raise ValueError("Invalid data_type parameter")
+
 		# Unsupported type
 		else:
 			raise TypeError("Expected bytes (file content) or str (file name)")
-
-	def _feed_data_from_path(self, filename: str, data_type: FileType):
-		"""
-		Reads a file in the user's operating system as a pandas dataframe and calls the apropriate function to merge the
-		data into the internal dataframes.
-		:param filename: Path to the file.
-		:param data_type: Type of data. See :class:`FileType` for available types
-		"""
-		# pd.read_json can take a long time. Therefore, we only read the file if the data_type parameter is valid.
-		if data_type == FileType.LINHAS:
-			file_data = pd.read_json(filename)
-			self._feed_linhas_json(file_data)
-		elif data_type == FileType.POIS:
-			file_data = pd.read_json(filename)
-			self._feed_pois_json(file_data)
-		elif data_type == FileType.PONTOS_LINHA:
-			file_data = pd.read_json(filename)
-			self._feed_pontos_linha_json(file_data)
-		elif data_type == FileType.SHAPE_LINHA:
-			file_data = pd.read_json(filename)
-			self._feed_shape_linha_json(file_data)
-		elif data_type == FileType.TABELA_LINHA:
-			file_data = pd.read_json(filename)
-			self._feed_tabela_linha_json(file_data)
-		elif data_type == FileType.TABELA_VEICULO:
-			file_data = pd.read_json(filename)
-			self._feed_tabela_veiculo_json(file_data)
-		elif data_type == FileType.TRECHOS_ITINERARIOS:
-			file_data = pd.read_json(filename)
-			self._feed_trechos_itinerarios_json(file_data)
-		elif data_type == FileType.VEICULOS:
-			file_data = pd.read_json(filename, lines=True)
-			self._feed_veiculos_json(file_data)
-		else:
-			raise ValueError("Invalid data_type parameter")
 
 	def _feed_linhas_json(self, file_data: pd.DataFrame):
 		"""
