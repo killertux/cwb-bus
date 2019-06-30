@@ -1,3 +1,4 @@
+from os import makedirs, path
 from typing import Union
 
 import pandas as pd
@@ -71,6 +72,45 @@ class DataReader(object):
 		# Unsupported type
 		else:
 			raise TypeError("Expected bytes (file content) or str (file name)")
+
+	def save_dataframe_cache(self, directory_path: str):
+		"""
+		Dumps all data currently stored in the internal dataframes to a cache directory.
+		:param directory_path: Path to the cache directory
+		"""
+		makedirs(directory_path, exist_ok=True)
+		self.bus_lines.to_csv(path.join(directory_path, 'bus_lines.csv.xz'), index=False)
+		self.bus_line_shapes.to_csv(path.join(directory_path, 'bus_lines_shapes.csv.xz'), index=False)
+		self.bus_stops.to_csv(path.join(directory_path, 'bus_stops.csv.xz'), index=False)
+		self.itineraries.to_csv(path.join(directory_path, 'itineraries.csv.xz'), index=False)
+		self.itinerary_stops.to_csv(path.join(directory_path, 'itinerary_stops.csv.xz'), index=False)
+		self.bus_lines_schedule_tables.to_csv(path.join(directory_path, 'bus_lines_schedule_tables.csv.xz'), index=False)
+		self.vehicles_schedule_tables.to_csv(path.join(directory_path, 'vehicles_schedule_tables.csv.xz'), index=False)
+		self.itinerary_stops_extra.to_csv(path.join(directory_path, 'itinerary_stops_extra.csv.xz'), index=False)
+		self.itinerary_distances.to_csv(path.join(directory_path, 'itinerary_distances.csv.xz'), index=False)
+		self.companies.to_csv(path.join(directory_path, 'companies.csv.xz'), index=False)
+		self.itinerary_stops_companies.to_csv(path.join(directory_path, 'itinerary_stops_companies.csv.xz'), index=False)
+		self.points_of_interest.to_csv(path.join(directory_path, 'points_of_interest.csv.xz'), index=False)
+		self.vehicle_log.to_csv(path.join(directory_path, 'vehicle_log.csv.xz'), index=False)
+
+	def from_dataframe_cache(self, directory_path: str):
+		"""
+		Loads all data currently stored in the specified cache directory into the internal dataframes.
+		:param directory_path: Path to the cache directory
+		"""
+		self.bus_lines = pd.read_csv(path.join(directory_path, 'bus_lines.csv.xz'))
+		self.bus_line_shapes = pd.read_csv(path.join(directory_path, 'bus_lines_shapes.csv.xz'), dtype={'bus_line_id': str})
+		self.bus_stops = pd.read_csv(path.join(directory_path, 'bus_stops.csv.xz'))
+		self.itineraries = pd.read_csv(path.join(directory_path, 'itineraries.csv.xz'))
+		self.itinerary_stops = pd.read_csv(path.join(directory_path, 'itinerary_stops.csv.xz'))
+		self.bus_lines_schedule_tables = pd.read_csv(path.join(directory_path, 'bus_lines_schedule_tables.csv.xz'))
+		self.vehicles_schedule_tables = pd.read_csv(path.join(directory_path, 'vehicles_schedule_tables.csv.xz'))
+		self.itinerary_stops_extra = pd.read_csv(path.join(directory_path, 'itinerary_stops_extra.csv.xz'))
+		self.itinerary_distances = pd.read_csv(path.join(directory_path, 'itinerary_distances.csv.xz'))
+		self.companies = pd.read_csv(path.join(directory_path, 'companies.csv.xz'))
+		self.itinerary_stops_companies = pd.read_csv(path.join(directory_path, 'itinerary_stops_companies.csv.xz'))
+		self.vehicle_log = pd.read_csv(path.join(directory_path, 'vehicle_log.csv.xz'))
+		self.points_of_interest = pd.read_csv(path.join(directory_path, 'points_of_interest.csv.xz'))
 
 	def _feed_linhas_json(self, file_data: pd.DataFrame):
 		"""
