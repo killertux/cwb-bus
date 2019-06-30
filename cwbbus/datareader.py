@@ -1,5 +1,7 @@
 import pandas as pd
 
+from datetime import datetime
+
 _lines = {
 	'bus_lines': {
 		'map': {
@@ -79,6 +81,7 @@ class DataReader(object):
 		self.itinerary_distances = pd.DataFrame(columns=['itinerary_stop_id', 'itinerary_next_stop_id', 'distance_m'])
 		self.companies = pd.DataFrame(columns=['id', 'name'])
 		self.itinerary_stops_companies = pd.DataFrame(columns=['itinerary_stop_id', 'company_id'])
+		self.vehicle_log = pd.DataFrame(columns=['timestamp', 'vehicle_id', 'bus_line_id', 'latitude', 'longitude'])
 		self.points_of_interest = pd.DataFrame(columns=_pois['points_of_interest']['cols'])
 
 	def feed_linhas_json(self, filename: str):
@@ -230,4 +233,17 @@ class DataReader(object):
 		self.itinerary_stops_companies = self.itinerary_stops_companies.merge(itinerary_stops_company_data, how='outer')
 
 	def feed_veiculos_json(self, filename):
-		pass
+		vehicle_log_data = pd.read_json(filename, lines=True)
+		vehicle_log_data.rename(columns={
+			'DTHR': 'timestamp',
+			'VEIC': 'vehicle_id',
+			'COD_LINHA': 'bus_line_id',
+			'LAT': 'latitude',
+			'LON': 'longitude'
+		}, inplace=True)
+
+		vehicle_log_data['timestamp'] = pd.to_datetime(vehicle_log_data['timestamp'], format='%d/%m/%Y %H:%M:%S')
+
+		# FIXME: these datasets are too large. How to deal with concatenation?
+		# self.vehicle_log = pd.concat([self.vehicle_log, vehicle_log_data], sort=False)
+		self.vehicle_log = vehicle_log_data
