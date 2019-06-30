@@ -1,62 +1,5 @@
 import pandas as pd
 
-from datetime import datetime
-
-_lines = {
-	'bus_lines': {
-		'map': {
-			'COD': 'id',
-			'NOME': 'name',
-			'NOME_COR': 'color',
-			'SOMENTE_CARTAO': 'card_only',
-			"CATEGORIA_SERVICO": 'category'
-		}
-	}
-}
-_lines['bus_lines']['orig_cols'] = [*_lines['bus_lines']['map']]
-_lines['bus_lines']['cols'] = [*_lines['bus_lines']['map'].values()]
-_lines['bus_lines']['index'] = _lines['bus_lines']['map']['COD']
-
-_line_stops = {
-	'bus_stops': {
-		'map': {
-			'NUM': 'number',
-			'NOME': 'name',
-			'TIPO': 'type',
-			'LAT': 'latitude',
-			'LON': 'longitude'
-		}
-	},
-	'itineraries': {
-		'map': {
-			'ITINERARY_ID': 'id',
-			'COD': 'bus_line_id',
-			'SENTIDO': 'direction'
-		}
-	}
-}
-_line_stops['bus_stops']['orig_cols'] = [*_line_stops['bus_stops']['map']]
-_line_stops['bus_stops']['cols'] = [*_line_stops['bus_stops']['map'].values()]
-_line_stops['bus_stops']['index'] = _line_stops['bus_stops']['map']['NUM']
-_line_stops['itineraries']['orig_cols'] = [*_line_stops['itineraries']['map']]
-_line_stops['itineraries']['cols'] = [*_line_stops['itineraries']['map'].values()]
-_line_stops['itineraries']['index'] = _line_stops['itineraries']['map']['ITINERARY_ID']
-
-_pois = {
-	'points_of_interest': {
-		'map': {
-			'POI_NAME': 'name',
-			'POI_DESC': 'description',
-			'POI_CATEGORY_NAME': 'category',
-			'POI_LAT': 'latitude',
-			'POI_LON': 'longitude'
-		}
-	}
-}
-_pois['points_of_interest']['orig_cols'] = [*_pois['points_of_interest']['map']]
-_pois['points_of_interest']['cols'] = [*_pois['points_of_interest']['map'].values()]
-_pois['points_of_interest']['index'] = _pois['points_of_interest']['map']['POI_NAME']
-
 # TODO: Ver o que pode ser otimizado. Nos dados que vêm de um único arquivo, pode-se utilizar concat em vez de merge.
 
 class DataReader(object):
@@ -64,16 +7,15 @@ class DataReader(object):
 		"""
 		Stores all dataframes and provides methods to feed data into the dataframes.
 		"""
-		self.bus_lines = pd.DataFrame(columns=_lines['bus_lines']['cols'])
+		self.bus_lines = pd.DataFrame(columns=['id', 'name', 'color', 'card_only', 'category'])
 		self.bus_line_shapes = pd.DataFrame(columns=['id', 'bus_line_id', 'latitude', 'longitude'])
-		self.bus_stops = pd.DataFrame(columns=_line_stops['bus_stops']['cols'])
-		self.itineraries = pd.DataFrame(columns=_line_stops['itineraries']['cols'])
+		self.bus_stops = pd.DataFrame(columns=['number', 'name', 'type', 'latitude', 'longitude'])
+		self.itineraries = pd.DataFrame(columns=['id', 'bus_line_id', 'direction'])
 		self.itinerary_stops = pd.DataFrame(columns=['itinerary_id', 'sequence_number', 'stop_number'])
 		self.bus_lines_schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'day_type',
 		                                                       'time', 'adaptive'])
 		self.vehicles_schedule_tables = pd.DataFrame(columns=['table_id', 'bus_line_id', 'bus_stop_id', 'vehicle_id',
 		                                                      'time'])
-		self.vehicles = pd.DataFrame(columns=['id'])
 		self.itinerary_stops_extra = pd.DataFrame(columns=['itinerary_id', 'itinerary_name', 'bus_line_id',
 		                                                   'itinerary_stop_id', 'stop_name', 'stop_name_short',
 		                                                   'stop_name_abbr', 'bus_stop_id', 'sequence_number', 'type',
@@ -82,7 +24,7 @@ class DataReader(object):
 		self.companies = pd.DataFrame(columns=['id', 'name'])
 		self.itinerary_stops_companies = pd.DataFrame(columns=['itinerary_stop_id', 'company_id'])
 		self.vehicle_log = pd.DataFrame(columns=['timestamp', 'vehicle_id', 'bus_line_id', 'latitude', 'longitude'])
-		self.points_of_interest = pd.DataFrame(columns=_pois['points_of_interest']['cols'])
+		self.points_of_interest = pd.DataFrame(columns=['name', 'description', 'category', 'latitude', 'longitude'])
 
 	def feed_linhas_json(self, filename: str):
 		"""
@@ -90,9 +32,15 @@ class DataReader(object):
 		:param filename: path to the file
 		"""
 		file_data = pd.read_json(filename)
-		bus_line_data = file_data[_lines['bus_lines']['orig_cols']].copy()
+		bus_line_data = file_data[['COD', 'NOME', 'NOME_COR', 'SOMENTE_CARTAO', 'CATEGORIA_SERVICO']].copy()
 
-		bus_line_data.rename(columns=_lines['bus_lines']['map'], inplace=True)
+		bus_line_data.rename(columns={
+			'COD': 'id',
+			'NOME': 'name',
+			'NOME_COR': 'color',
+			'SOMENTE_CARTAO': 'card_only',
+			"CATEGORIA_SERVICO": 'category'
+		}, inplace=True)
 
 		self.bus_lines = self.bus_lines.merge(bus_line_data, how='outer')
 
@@ -102,9 +50,15 @@ class DataReader(object):
 		:param filename: path to the file
 		"""
 		file_data = pd.read_json(filename)
-		poi_data = file_data[_pois['points_of_interest']['orig_cols']].copy()
+		poi_data = file_data[['POI_NAME', 'POI_DESC', 'POI_CATEGORY_NAME', 'POI_LAT', 'POI_LON']].copy()
 
-		poi_data.rename(columns=_pois['points_of_interest']['map'], inplace=True)
+		poi_data.rename(columns={
+			'POI_NAME': 'name',
+			'POI_DESC': 'description',
+			'POI_CATEGORY_NAME': 'category',
+			'POI_LAT': 'latitude',
+			'POI_LON': 'longitude'
+		}, inplace=True)
 
 		self.points_of_interest = self.points_of_interest.merge(poi_data, how='outer')
 
@@ -114,14 +68,24 @@ class DataReader(object):
 		:param filename: path to the file
 		"""
 		file_data = pd.read_json(filename)
-		bus_stop_data = file_data[_line_stops['bus_stops']['orig_cols']].copy()
-		itinerary_data = file_data[_line_stops['itineraries']['orig_cols']].copy()
+		bus_stop_data = file_data[['NUM', 'NOME', 'TIPO', 'LAT', 'LON']].copy()
+		itinerary_data = file_data[['ITINERARY_ID', 'COD', 'SENTIDO']].copy()
 		itinerary_stops_data = file_data[['ITINERARY_ID', 'SEQ', 'NUM']].copy()
 
-		bus_stop_data.rename(columns=_line_stops['bus_stops']['map'], inplace=True)
+		bus_stop_data.rename(columns={
+			'NUM': 'number',
+			'NOME': 'name',
+			'TIPO': 'type',
+			'LAT': 'latitude',
+			'LON': 'longitude'
+		}, inplace=True)
 		bus_stop_data.drop_duplicates(inplace=True)
 
-		itinerary_data.rename(columns=_line_stops['itineraries']['map'], inplace=True)
+		itinerary_data.rename(columns={
+			'ITINERARY_ID': 'id',
+			'COD': 'bus_line_id',
+			'SENTIDO': 'direction'
+		}, inplace=True)
 		itinerary_data.drop_duplicates(inplace=True)
 
 		itinerary_stops_data.rename(columns={
@@ -166,6 +130,7 @@ class DataReader(object):
 			3: 'sunday',
 			4: 'holiday'
 		}}, inplace=True)
+		# TODO: Add file date to the data?
 
 		self.bus_lines_schedule_tables = self.bus_lines_schedule_tables.merge(schedule_table_data, how='outer')
 
@@ -181,6 +146,7 @@ class DataReader(object):
 			'VEICULO': 'vehicle_id'
 		}, inplace=True)
 		schedule_table_data['bus_line_id'] = schedule_table_data['bus_line_id'].astype(str)
+		# TODO: Add file date to the data?
 
 		self.vehicles_schedule_tables = self.vehicles_schedule_tables.merge(schedule_table_data, how='outer')
 
