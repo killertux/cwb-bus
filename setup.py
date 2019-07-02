@@ -5,7 +5,7 @@ setup(
 	version='0.0.1',
 	packages=[''],
 	package_dir={'': 'cwbbus'},
-	url='https://github.com/killertux/cwb-bus',
+	url='https://github.com/killertux/cwbbus',
 	license='MIT',
 	author='Angelin01, killertux, Kabbah',
 	author_email='',
