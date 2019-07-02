@@ -2,11 +2,11 @@ from setuptools import setup
 
 setup(
 	name='cwbbus',
-	version='0.0.1',
-	packages=[''],
+	version='0.0.2',
+	packages=['cwbbus'],
 	package_dir={'': 'cwbbus'},
 	url='https://github.com/killertux/cwbbus',
-	download_url='https://github.com/killertux/cwbbus/archive/0.0.1.tar.gz',
+	download_url='https://github.com/killertux/cwbbus/archive/0.0.2.tar.gz',
 	install_requires=[
 		'aiohttp',
 		'async_timeout',
