@@ -4,7 +4,7 @@ setup(
 	name='cwbbus',
 	version='0.0.2',
 	packages=['cwbbus'],
-	package_dir={'': 'cwbbus'},
+	package_dir={},
 	url='https://github.com/killertux/cwbbus',
 	download_url='https://github.com/killertux/cwbbus/archive/0.0.2.tar.gz',
 	install_requires=[
